@@ -1,26 +1,20 @@
-# Functional Specification: Partial Refund Logic
+# Specification: Refund Calculation Logic
 
-## Overview
-This document defines the mathematical and state-transition rules for partial refunds within the Enterprise Cloud platform.
+## 1. Overview
+This document defines the requirements for the refund service.
 
-## 1. Calculation Logic
-When a partial refund is initiated, the system must calculate the tax portion to be returned to the user.
+## 2. Mathematical Formula
+All partial refunds must follow the proportional tax rule:
 
-**Formula:**
 $$Tax_{refund} = \left( \frac{Amount_{refund}}{Amount_{total}} \right) \times Tax_{total}$$
 
-* **Rounding Rule:** Round to the nearest two decimal places (Half-Up).
-* **Validation:** $Amount_{refund}$ cannot exceed the $Amount_{remaining}$ of the original transaction.
+## 3. Technical Constraints
+* **Data Types:** Use `Decimal` for all currency calculations to ensure 100% accuracy (no floating-point errors).
+* **Rounding:** Results must be rounded to exactly **2 decimal places** using the **HALF_UP** method.
+* **Input Validation:** * $Amount_{refund} > 0$
+    * $Amount_{refund} \leq Amount_{total}$
 
-## 2. API Endpoints involved
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| POST | `/v1/payments` | Create initial authorization |
-| POST | `/v1/payments/{id}/capture` | Finalize funds |
-| POST | `/v1/payments/{id}/refund` | Process refund (Partial/Full) |
-
-## 3. Database State Mapping
-* `Status: 1` -> Pending
-* `Status: 2` -> Captured
-* `Status: 3` -> Partially Refunded
-* `Status: 4` -> Fully Refunded
+## 4. Expected API Behavior
+* **Endpoint:** `POST /refund`
+* **Content-Type:** `application/json`
+* **Success Response:** `200 OK` with JSON body `{"tax_refund": "X.XX"}`
